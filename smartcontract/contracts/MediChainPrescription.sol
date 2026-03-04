@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-// Importa o contrato AccessControl do OpenZeppelin para gerenciar permissões e controle de acesso baseado em roles
+
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
