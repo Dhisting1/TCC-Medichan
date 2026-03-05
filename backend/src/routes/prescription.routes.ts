@@ -1,14 +1,8 @@
 import { Router } from "express";
-import { registerPrescription } from "../services/prescription.service";
+import { create } from "../controllers/prescription.controller";
 
 const router = Router();
 
-router.post("/", async (req, res) => {
-  const { prescriptionId, content } = req.body;
-
-  const result = await registerPrescription(prescriptionId, content);
-
-  res.json(result);
-});
+router.post("/", create);
 
 export default router;

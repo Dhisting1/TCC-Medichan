@@ -8,15 +8,17 @@ describe("MediChainPrescription", function () {
     const Contract = await ethers.getContractFactory("MediChainPrescription");
     const contract = await Contract.deploy(admin.address);
 
-    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-2026-0001"));
-    const hash = ethers.keccak256(ethers.toUtf8Bytes("conteudo da receita"));
+    // registra médico
+    await contract.registerDoctor(doctor.address);
 
-    await contract.connect(doctor).registerPrescription(id, hash);
+    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-1"));
+    const hash = ethers.keccak256(ethers.toUtf8Bytes("ipfsHash"));
+
+    await contract.connect(doctor).createPrescription(id, hash);
 
     const result = await contract.getPrescription(id);
 
-    expect(result[0]).to.equal(hash);
-    expect(result[1]).to.equal(doctor.address);
+    expect(result.doctor).to.equal(doctor.address);
   });
 
   it("should not allow duplicate prescription", async function () {
@@ -25,12 +27,14 @@ describe("MediChainPrescription", function () {
     const Contract = await ethers.getContractFactory("MediChainPrescription");
     const contract = await Contract.deploy(admin.address);
 
-    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-2026-0002"));
-    const hash = ethers.keccak256(ethers.toUtf8Bytes("conteudo"));
+    await contract.registerDoctor(doctor.address);
 
-    await contract.connect(doctor).registerPrescription(id, hash);
+    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-2"));
+    const hash = ethers.keccak256(ethers.toUtf8Bytes("ipfsHash"));
 
-    await expect(contract.connect(doctor).registerPrescription(id, hash)).to.be
+    await contract.connect(doctor).createPrescription(id, hash);
+
+    await expect(contract.connect(doctor).createPrescription(id, hash)).to.be
       .reverted;
   });
 
@@ -40,18 +44,19 @@ describe("MediChainPrescription", function () {
     const Contract = await ethers.getContractFactory("MediChainPrescription");
     const contract = await Contract.deploy(admin.address);
 
-    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-2026-0003"));
-    const hash = ethers.keccak256(ethers.toUtf8Bytes("conteudo"));
+    await contract.registerDoctor(doctor.address);
+    await contract.registerPharmacy(pharmacy.address);
 
-    await contract.connect(doctor).registerPrescription(id, hash);
+    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-3"));
+    const hash = ethers.keccak256(ethers.toUtf8Bytes("ipfsHash"));
 
-    await contract.connect(admin).grantPharmacy(pharmacy.address);
+    await contract.connect(doctor).createPrescription(id, hash);
 
     await contract.connect(pharmacy).markAsUsed(id);
 
     const result = await contract.getPrescription(id);
 
-    expect(result[3]).to.equal(2); // USED
+    expect(result.status).to.equal(2); // USED
   });
 
   it("should not allow non pharmacy to mark as used", async function () {
@@ -60,10 +65,12 @@ describe("MediChainPrescription", function () {
     const Contract = await ethers.getContractFactory("MediChainPrescription");
     const contract = await Contract.deploy(admin.address);
 
-    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-2026-0004"));
-    const hash = ethers.keccak256(ethers.toUtf8Bytes("conteudo"));
+    await contract.registerDoctor(doctor.address);
 
-    await contract.connect(doctor).registerPrescription(id, hash);
+    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-4"));
+    const hash = ethers.keccak256(ethers.toUtf8Bytes("ipfsHash"));
+
+    await contract.connect(doctor).createPrescription(id, hash);
 
     await expect(contract.connect(attacker).markAsUsed(id)).to.be.reverted;
   });
@@ -74,15 +81,17 @@ describe("MediChainPrescription", function () {
     const Contract = await ethers.getContractFactory("MediChainPrescription");
     const contract = await Contract.deploy(admin.address);
 
-    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-2026-0005"));
-    const hash = ethers.keccak256(ethers.toUtf8Bytes("conteudo"));
+    await contract.registerDoctor(doctor.address);
 
-    await contract.connect(doctor).registerPrescription(id, hash);
+    const id = ethers.keccak256(ethers.toUtf8Bytes("RX-5"));
+    const hash = ethers.keccak256(ethers.toUtf8Bytes("ipfsHash"));
+
+    await contract.connect(doctor).createPrescription(id, hash);
 
     await contract.connect(doctor).revokePrescription(id);
 
     const result = await contract.getPrescription(id);
 
-    expect(result[3]).to.equal(3); // REVOKED
+    expect(result.status).to.equal(3); // REVOKED
   });
 });
