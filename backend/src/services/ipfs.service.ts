@@ -1,22 +1,22 @@
 import axios from "axios";
-import FormData from "form-data";
 
 export async function uploadToIPFS(data: any) {
-  const form = new FormData();
-
-  form.append("file", JSON.stringify(data));
-
-  const res = await axios.post(
-    "https://api.pinata.cloud/pinning/pinFileToIPFS",
-    form,
-    {
-      headers: {
-        ...form.getHeaders(),
-        pinata_api_key: process.env.PINATA_API_KEY!,
-        pinata_secret_api_key: process.env.PINATA_SECRET!,
+  try {
+    const res = await axios.post(
+      "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          "Content-Type": "application/json",
+        },
       },
-    },
-  );
+    );
 
-  return res.data.IpfsHash;
+    return res.data.IpfsHash;
+  } catch (error: any) {
+    console.error("IPFS ERROR:", error.response?.data || error);
+
+    throw error;
+  }
 }
