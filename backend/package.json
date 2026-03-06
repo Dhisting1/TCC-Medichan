@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
@@ -20,7 +22,9 @@
     "form-data": "^4.0.5",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
-    "qrcode": "^1.5.4"
+    "prisma": "^5.22.0",
+    "qrcode": "^1.5.4",
+    "redis": "^5.11.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

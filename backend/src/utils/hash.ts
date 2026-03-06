@@ -1,5 +1,7 @@
 import crypto from "crypto";
 
 export function generateHash(data: string) {
-  return crypto.createHash("sha256").update(data).digest("hex");
+  const hash = crypto.createHash("sha256").update(data).digest("hex");
+
+  return "0x" + hash;
 }
