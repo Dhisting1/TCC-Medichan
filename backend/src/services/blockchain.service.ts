@@ -34,8 +34,15 @@ export async function createPrescription(id: string, ipfsHash: string) {
 }
 
 /*
-Farmácia marca receita como usada
+Médico revoga uma receita
 */
+export async function revokePrescription(id: string) {
+  const tx = await contract.revokePrescription(id);
+
+  await tx.wait();
+}
+
+
 export async function markPrescriptionUsed(id: string) {
   const tx = await contract.markAsUsed(id);
 

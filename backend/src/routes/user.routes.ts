@@ -1,10 +1,13 @@
 import { Router } from "express";
-import { verifyDoctor, verifyPharmacy } from "../controllers/user.controller";
-import { auth } from "../middleware/auth.middleware";
+import { listUsers, verifyDoctor, verifyPharmacy } from "../controllers/user.controller";
+import { auth, requireRole } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.post("/verify-doctor", auth, verifyDoctor);
-router.post("/verify-pharmacy", auth, verifyPharmacy);
+// listar todos os usuários — somente ADMIN
+router.get("/", auth, requireRole("ADMIN"), listUsers);
+
+router.post("/verify-doctor", auth, requireRole("ADMIN"), verifyDoctor);
+router.post("/verify-pharmacy", auth, requireRole("ADMIN"), verifyPharmacy);
 
 export default router;

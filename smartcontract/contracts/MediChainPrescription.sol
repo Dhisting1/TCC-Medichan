@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -37,6 +38,13 @@ contract MediChainPrescription is AccessControl {
     constructor(address backendWallet) {
 
         _grantRole(DEFAULT_ADMIN_ROLE, backendWallet);
+
+        // O backend age como intermediário confiável e precisa
+        // poder criar receitas (DOCTOR_ROLE) e dispensá-las (PHARMACY_ROLE)
+        // após verificar a identidade dos profissionais off-chain
+        _grantRole(DOCTOR_ROLE, backendWallet);
+
+        _grantRole(PHARMACY_ROLE, backendWallet);
 
     }
 
@@ -102,6 +110,11 @@ contract MediChainPrescription is AccessControl {
         require(
             prescriptions[id].doctor == msg.sender,
             "Not prescription owner"
+        );
+
+        require(
+            prescriptions[id].status == Status.ACTIVE,
+            "Only active prescriptions can be revoked"
         );
 
         prescriptions[id].status = Status.REVOKED;

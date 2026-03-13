@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
 
 export function auth(req: any, res: any, next: any) {
   const token = req.headers.authorization;
@@ -19,4 +20,22 @@ export function auth(req: any, res: any, next: any) {
   } catch {
     return res.status(401).json({ error: "Invalid token" });
   }
+}
+
+/*
+Verifica se o usuário autenticado tem o role exigido pela rota.
+Uso: router.post("/", auth, requireRole("DOCTOR"), controller)
+*/
+export function requireRole(...roles: string[]) {
+  return (req: any, res: Response, next: NextFunction) => {
+    const userRole = req.user?.role;
+
+    if (!userRole || !roles.includes(userRole)) {
+      return res.status(403).json({
+        error: `Acesso negado. Requerido: ${roles.join(" ou ")}`,
+      });
+    }
+
+    next();
+  };
 }

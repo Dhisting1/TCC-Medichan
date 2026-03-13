@@ -3,67 +3,94 @@ import {
   registerDoctor,
   registerPharmacy,
 } from "../services/blockchain.service";
-import { Response } from "express";
+import { Request, Response } from "express";
+
+/*
+Lista todos os usuários — somente ADMIN
+*/
+export async function listUsers(req: Request, res: Response) {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        crm: true,
+        cnpj: true,
+        createdAt: true,
+      },
+    });
+    return res.json({ users });
+  } catch {
+    return res.status(500).json({ error: "Erro ao listar usuários" });
+  }
+}
 
 export async function verifyDoctor(req: Request, res: Response) {
-  const { crm } = req.body;
-  const userId = req.user?.id;
+  const { crm, userId } = req.body;
 
-  if (!userId) {
+  // admin pode passar userId no body para aprovar outro usuário
+  const targetId = userId || (req as any).user?.id;
+
+  if (!targetId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: targetId },
   });
 
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  // registra médico na blockchain
-  await registerDoctor(user.wallet);
+  try {
+    if (user.wallet) {
+      await registerDoctor(user.wallet);
+    }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      role: "DOCTOR",
-      crm,
-    },
-  });
+    await prisma.user.update({
+      where: { id: targetId },
+      data: { role: "DOCTOR", crm },
+    });
 
-  res.json({
-    message: "Doctor verified",
-  });
+    return res.json({ message: "Doctor verified" });
+  } catch {
+    return res.status(500).json({ error: "Erro ao verificar médico" });
+  }
 }
+
 export async function verifyPharmacy(req: Request, res: Response) {
-  const { cnpj } = req.body;
-  const userId = req.user?.id;
+  const { cnpj, userId } = req.body;
 
-  if (!userId) {
+  const targetId = userId || (req as any).user?.id;
+
+  if (!targetId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { id: targetId },
   });
 
   if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
-  // registra farmácia na blockchain
-  await registerPharmacy(user.wallet);
+  try {
+    if (user.wallet) {
+      await registerPharmacy(user.wallet);
+    }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      role: "PHARMACY",
-      cnpj,
-    },
-  });
+    await prisma.user.update({
+      where: { id: targetId },
+      data: { role: "PHARMACY", cnpj },
+    });
 
-  res.json({
-    message: "Pharmacy verified",
-  });
+    return res.json({ message: "Pharmacy verified" });
+  } catch {
+    return res.status(500).json({ error: "Erro ao verificar farmácia" });
+  }
 }
+

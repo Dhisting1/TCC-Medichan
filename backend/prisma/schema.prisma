@@ -21,4 +21,25 @@ model User {
 
   createdAt DateTime @default(now())
 
+  prescriptions Prescription[]
+
+}
+
+model Prescription {
+
+  id         String   @id               // id gerado (0x...)
+  ipfsHash   String
+  patient    String
+  medication String
+  dosage     String
+  qr         String
+
+  status     String   @default("ACTIVE") // ACTIVE | USED | REVOKED
+
+  doctorId   String
+  doctor     User     @relation(fields: [doctorId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
 }
