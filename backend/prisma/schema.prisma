@@ -16,8 +16,9 @@ model User {
 
   role      String   @default("PATIENT")
 
-  crm       String?
-  cnpj      String?
+  cpf       String?  @unique  // pacientes
+  crm       String?           // médicos
+  cnpj      String?           // farmácias
 
   createdAt DateTime @default(now())
 
@@ -27,12 +28,13 @@ model User {
 
 model Prescription {
 
-  id         String   @id               // id gerado (0x...)
-  ipfsHash   String
-  patient    String
-  medication String
-  dosage     String
-  qr         String
+  id           String   @id
+  ipfsHash     String
+  patient      String
+  patientEmail String?                    // email para notificação (RF06)
+  medication   String
+  dosage       String
+  qr           String
 
   status     String   @default("ACTIVE") // ACTIVE | USED | REVOKED
 

@@ -12,13 +12,15 @@ import {
 } from "../services/blockchain.service";
 
 import { keccak256, toUtf8Bytes } from "ethers";
+import { notifyPatient } from "../services/email.service";
+import { generatePrescriptionPdf } from "../services/pdf.service";
 
 /*
 Cria receita — somente DOCTOR
 Salva no IPFS, registra na blockchain e persiste no banco
 */
 export async function create(req: Request, res: Response) {
-  const { patient, medication, dosage } = req.body;
+  const { patient, patientEmail, medication, dosage } = req.body;
 
   // 5. validação de entrada
   if (!patient || typeof patient !== "string" || patient.trim() === "") {
@@ -63,10 +65,43 @@ export async function create(req: Request, res: Response) {
         medication: data.medication,
         dosage: data.dosage,
         qr,
+        patientEmail: patientEmail?.trim() || null,
         status: "ACTIVE",
         doctorId,
       },
     });
+
+    // RF06 — gera PDF e notifica paciente por email
+    if (patientEmail?.trim()) {
+      const doctorEmail = (req as any).user?.email || "medico@medichain.com";
+      const doctorCrm   = (req as any).user?.crm   || undefined;
+      const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+      // gera PDF da prescrição
+      const pdfBuffer = await generatePrescriptionPdf({
+        prescriptionId: id,
+        patient:        data.patient,
+        patientEmail:   patientEmail.trim(),
+        medication:     data.medication,
+        dosage:         data.dosage,
+        doctorEmail,
+        doctorCrm,
+        createdAt:      new Date(),
+        qrDataUrl:      qr,
+      });
+
+      await notifyPatient({
+        patientName:    data.patient,
+        patientEmail:   patientEmail.trim(),
+        prescriptionId: id,
+        medication:     data.medication,
+        dosage:         data.dosage,
+        doctorEmail,
+        qrDataUrl:      qr,
+        baseUrl,
+        pdfBuffer,
+      });
+    }
 
     return res.status(201).json({ id, ipfsHash, qr });
   } catch (error: any) {

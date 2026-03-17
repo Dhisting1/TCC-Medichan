@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import { api } from "../../services/api";
 import Layout from "../../components/Layout";
+import PatientSearch, { PatientData } from "../../components/PatientSearch";
 import { TEAL, LIME, WHITE, BORDER, MUTED, SUBTLE, STATUS_COLORS, STATUS_LABELS } from "../../styles/tokens";
 
 // ── abas ─────────────────────────────────────────────────────────────────────
@@ -210,11 +211,18 @@ export default function PharmacyDashboard() {
   const [tab, setTab] = useState<"validate" | "active" | "history">("validate");
 
   // aba validar
+  const [selectedPatient, setSelectedPatient] = useState<PatientData | null>(null);
   const [searchId,   setSearchId]   = useState("");
   const [found,      setFound]      = useState<Presc | null>(null);
   const [searching,  setSearching]  = useState(false);
   const [dispensing, setDispensing] = useState(false);
   const [msg,        setMsg]        = useState("");
+
+  // busca de paciente (aba validar)
+  const [patientQ,   setPatientQ]   = useState("");
+  const [searchingP, setSearchingP] = useState(false);
+  const [foundPatient, setFoundPatient] = useState<{id:string;email:string;cpf?:string}|null>(null);
+  const [patientErr, setPatientErr] = useState("");
   const [msgOk,      setMsgOk]      = useState(false);
 
   // aba receitas ativas
@@ -251,6 +259,17 @@ export default function PharmacyDashboard() {
   }, [tab]);
 
   // ── busca por ID ──────────────────────────────────────────────────────────
+  async function handlePatientSearch() {
+    if (!patientQ.trim()) return;
+    setSearchingP(true); setFoundPatient(null); setPatientErr("");
+    try {
+      const res = await api.get(`/users/search?q=${encodeURIComponent(patientQ.trim())}`);
+      setFoundPatient(res.data.patient);
+    } catch {
+      setPatientErr("Paciente não encontrado.");
+    } finally { setSearchingP(false); }
+  }
+
   async function handleSearch() {
     if (!searchId.trim()) return;
     setSearching(true); setFound(null); setMsg("");
@@ -361,25 +380,7 @@ export default function PharmacyDashboard() {
             </ActionRow>
           </Card>
 
-          {/* painel lateral */}
-          <div>
-            <SideCard>
-              <SideHeader>Dados do emissor</SideHeader>
-              <SideBody>
-                {["Nome", "CRM", "Telefone", "Endereço"].map(f => (
-                  <SideField key={f}><SideLbl>{f}:</SideLbl><SideVal>—</SideVal></SideField>
-                ))}
-              </SideBody>
-            </SideCard>
-            <SideCard>
-              <SideHeader>Dados do paciente</SideHeader>
-              <SideBody>
-                {[["Nome", found?.patient], ["CPF", "—"], ["Idade", "—"], ["Sexo", "—"]].map(([f, v]) => (
-                  <SideField key={f}><SideLbl>{f}:</SideLbl><SideVal>{v || "—"}</SideVal></SideField>
-                ))}
-              </SideBody>
-            </SideCard>
-          </div>
+          <PatientSearch onSelect={setSelectedPatient} selected={selectedPatient} />
         </PageGrid>
       )}
 
