@@ -17,13 +17,9 @@ contract MediChainPrescription is AccessControl {
     }
 
     struct Prescription {
-
         bytes32 ipfsHash;
-
         address doctor;
-
         uint256 createdAt;
-
         Status status;
     }
 
