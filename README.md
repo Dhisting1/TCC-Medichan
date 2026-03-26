@@ -1,71 +1,144 @@
-# Medi-Chain — Sistema de E-Prescription
+# Medi-Chain — Sistema de E-Prescription com Blockchain
 
-Sistema de prescrição eletrônica baseado em blockchain, desenvolvido como TCC do curso de Tecnologia em Sistemas para Internet do IFB.
+> Trabalho de Conclusão de Curso — Instituto Federal de Brasília (IFB)  
+> Curso Superior de Tecnologia em Sistemas para Internet  
+> Autores: Lucas Fernando Gonçalves Lima · Pablo Miranda Rocha Costa  
+> Orientador: Me. Claudio Ulisse · 2025
 
-## Visão Geral
+---
 
-O Medi-Chain integra e-prescription com a blockchain Ethereum para garantir segurança, rastreabilidade e autenticidade das receitas médicas.
+## Sobre o projeto
 
-## Tecnologias
+O **Medi-Chain** é um sistema de prescrição médica eletrônica (e-prescription) que utiliza a tecnologia blockchain para garantir a autenticidade, rastreabilidade e imutabilidade das receitas médicas. Cada prescrição é registrada na rede Ethereum, armazenada no IPFS e enviada automaticamente ao paciente por e-mail em formato PDF com QR Code.
 
-- **Frontend:** React + Vite + TypeScript + Styled Components
-- **Backend:** Node.js + Express + TypeScript + Prisma
-- **Banco de Dados:** PostgreSQL
-- **Blockchain:** Ethereum (Sepolia Testnet) + Solidity + Hardhat
-- **Armazenamento:** IPFS via Pinata
-- **Cache:** Redis
+### O problema que resolve
+
+Cerca de 30% dos atestados médicos emitidos no Brasil são falsificados (Fecomércio, 2020). Receitas escritas à mão apresentam média de 3,3 erros por documento. O Medi-Chain combate isso com um registro imutável e auditável na blockchain, impossível de falsificar.
+
+---
+
+## Arquitetura
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Nginx (porta 80)                  │
+│          /api/* → backend   /  → frontend            │
+└──────────────────┬──────────────────┬───────────────┘
+                   │                  │
+          ┌────────▼───────┐  ┌───────▼────────┐
+          │    Backend     │  │    Frontend     │
+          │ Node.js+Express│  │  React+Vite+TS  │
+          └────────┬───────┘  └────────────────┘
+                   │
+       ┌───────────┼────────────────┐
+       │           │                │
+┌──────▼──────┐ ┌──▼──┐  ┌─────────▼──────────┐
+│ PostgreSQL  │ │Redis│  │   Ethereum Sepolia   │
+│  (histórico)│ │cache│  │  Smart Contract      │
+└─────────────┘ └─────┘  └────────────────────-┘
+                                    │
+                             ┌──────▼──────┐
+                             │    IPFS     │
+                             │  (Pinata)   │
+                             └─────────────┘
+```
+
+### Três camadas de armazenamento
+
+| Camada | O que armazena | Por quê |
+|--------|----------------|---------|
+| **PostgreSQL** | Usuários, resumo das receitas, histórico | Consultas rápidas sem chamar a blockchain |
+| **IPFS** | Dados completos da prescrição (JSON) | Armazenamento descentralizado e imutável fora da chain |
+| **Blockchain** | Hash do IPFS + status da receita | Fonte da verdade — não pode ser alterada ou deletada |
+
+---
+
+## Funcionalidades
+
+| # | Requisito | Status |
+|---|-----------|--------|
+| RF01 | Médico registra prescrição digital | ✅ |
+| RF02 | Autenticação com roles (PATIENT, DOCTOR, PHARMACY, ADMIN) | ✅ |
+| RF03 | Compartilhamento via QR Code | ✅ |
+| RF04 | Histórico de prescrições para médico e farmácia | ✅ |
+| RF05 | Farmácia valida autenticidade na blockchain | ✅ |
+| RF06 | Notificação ao paciente com PDF por e-mail | ✅ |
+| RF07 | Status rastreável: ACTIVE → USED / REVOKED | ✅ |
+
+---
+
+## Stack tecnológica
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | React.js + Vite + TypeScript + Styled-components |
+| Backend | Node.js + Express.js + TypeScript |
+| ORM | Prisma |
+| Banco de dados | PostgreSQL |
+| Cache | Redis |
+| Blockchain | Ethereum Sepolia + Solidity + Hardhat |
+| Controle de acesso | OpenZeppelin AccessControl |
+| Armazenamento | IPFS via Pinata |
+| Autenticação | JWT + bcrypt |
+| PDF | PDFKit |
+| E-mail | Nodemailer |
+| Infraestrutura | Docker + Docker Compose + Nginx |
+
+---
+
+## Estrutura do repositório
+
+```
+TCC/
+├── backend/          # API RESTful (Node.js + Express)
+├── frontend/         # SPA (React + Vite)
+├── smartcontract/    # Contrato inteligente (Solidity + Hardhat)
+├── nginx/            # Configuração do proxy reverso
+├── docker-compose.yml          # Desenvolvimento local
+├── docker-compose.prod.yml     # Produção
+├── deploy.sh                   # Script de deploy automatizado
+└── .env.prod                   # Template de variáveis de produção
+```
+
+---
 
 ## Pré-requisitos
 
-- Node.js >= 18
-- Docker e Docker Compose
-- Conta na [Pinata](https://pinata.cloud) para armazenamento IPFS
-- Carteira Ethereum com saldo na Sepolia Testnet
+- [Node.js](https://nodejs.org) >= 20
+- [Docker](https://docker.com) + Docker Compose
+- Conta no [Pinata](https://pinata.cloud) (IPFS)
+- Conta no [Infura](https://infura.io) (RPC Sepolia)
+- Conta no [Gmail](https://gmail.com) com senha de app (e-mail)
 
-## Instalação e Execução
+---
 
-### 1. Infraestrutura (PostgreSQL + Redis)
+## Rodando localmente
 
-```bash
-docker-compose up -d
-```
-
-### 2. Smart Contract
+### 1. Clone o repositório
 
 ```bash
-cd smartcontract
-npm install
-
-# Compilar o contrato
-npx hardhat compile
-
-# Rodar os testes
-npx hardhat test
-
-# Deploy na Sepolia
-npx hardhat run scripts/deploy.ts --network sepolia
+git clone https://github.com/seu-usuario/medi-chain.git
+cd medi-chain
 ```
 
-Anote o endereço do contrato exibido no terminal e coloque no `.env` do backend.
+### 2. Suba o banco e o Redis com Docker
 
-### 3. Backend
+```bash
+docker compose up -d postgres redis
+```
+
+### 3. Configure o backend
 
 ```bash
 cd backend
-npm install
-
-# Configurar variáveis de ambiente
 cp .env.example .env
 # Edite o .env com suas credenciais
-
-# Rodar as migrations do banco
-npx prisma migrate deploy
-
-# Iniciar o servidor
+npm install
+npx prisma migrate dev
 npm run dev
 ```
 
-### 4. Frontend
+### 4. Configure o frontend
 
 ```bash
 cd frontend
@@ -73,29 +146,99 @@ npm install
 npm run dev
 ```
 
-Acesse: `http://localhost:5173`
+O frontend estará disponível em `http://localhost:5173` e o backend em `http://localhost:3000`.
 
-## Variáveis de Ambiente (Backend)
+---
 
-Crie um arquivo `.env` na pasta `backend/` com:
+## Variáveis de ambiente — backend
 
 ```env
 PORT=3000
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/medichain"
-JWT_SECRET=seu_segredo_aqui
-SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/sua_chave
-PRIVATE_KEY=sua_chave_privada_ethereum
-CONTRACT_ADDRESS=endereco_do_contrato_deployado
-PINATA_JWT=seu_jwt_pinata
+DATABASE_URL=postgresql://medichain:medichain@localhost:5432/medichain
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=sua_chave_secreta
+
+# Blockchain
+SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/SEU_ID
+PRIVATE_KEY=0xSUA_CHAVE_PRIVADA
+CONTRACT_ADDRESS=0xe905e4e639AfFf9D9e30738c2a1F872D4cb0Fa16
+
+# IPFS
+PINATA_JWT=SEU_JWT_PINATA
+
+# URLs
 BASE_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173
+
+# E-mail
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=seu@gmail.com
+EMAIL_PASS=sua_senha_de_app
 ```
 
-> ⚠️ **Nunca commite o arquivo `.env` no repositório.**
+---
 
-## Fluxo de Uso
 
-1. Médico se cadastra e tem o CRM verificado pelo administrador
-2. Médico emite uma receita → dados salvos no IPFS → hash registrado na blockchain
-3. Paciente recebe QR code com o ID da receita
-4. Farmácia escaneia o QR, valida a receita na blockchain e faz a dispensação
+## Rotas da API
 
+| Método | Rota | Permissão | Descrição |
+|--------|------|-----------|-----------|
+| POST | `/auth/register` | Pública | Cadastro (PATIENT/DOCTOR/PHARMACY) |
+| POST | `/auth/login` | Pública | Login — retorna JWT |
+| GET | `/users` | ADMIN | Lista todos os usuários |
+| DELETE | `/users/:id` | ADMIN | Exclui usuário |
+| GET | `/users/search?q=` | DOCTOR/PHARMACY | Busca paciente por e-mail ou CPF |
+| POST | `/users/verify-doctor` | ADMIN | Aprova médico |
+| POST | `/users/verify-pharmacy` | ADMIN | Aprova farmácia |
+| POST | `/prescriptions` | DOCTOR | Cria prescrição (IPFS + blockchain + PDF + e-mail) |
+| GET | `/prescriptions/validate/:id` | Pública | Valida na blockchain |
+| POST | `/prescriptions/use/:id` | PHARMACY | Dispensa receita |
+| POST | `/prescriptions/revoke/:id` | DOCTOR | Revoga receita |
+| GET | `/prescriptions/history/doctor` | DOCTOR | Histórico do médico |
+| GET | `/prescriptions/history/pharmacy` | PHARMACY | Receitas ativas |
+| GET | `/prescriptions/history/pharmacy/dispensed` | PHARMACY | Histórico de dispensações |
+| GET | `/health` | Pública | Health check |
+
+---
+
+## Perfis de acesso
+
+| Perfil | Como criar | O que pode fazer |
+|--------|-----------|-----------------|
+| **PATIENT** | Cadastro direto no sistema + CPF | Consultar status de receitas |
+| **DOCTOR** | Cadastro + CRM → aprovação pelo ADMIN | Criar, visualizar e revogar receitas |
+| **PHARMACY** | Cadastro + CNPJ → aprovação pelo ADMIN | Validar e dispensar receitas |
+| **ADMIN** | Criado via Prisma Studio | Gerenciar e excluir usuários, aprovar médicos e farmácias |
+
+Para criar o primeiro ADMIN:
+```bash
+cd backend
+npx prisma studio
+# Acesse a tabela User → edite o campo role para "ADMIN"
+```
+
+---
+
+## Smart Contract
+
+- **Rede:** Ethereum Sepolia Testnet
+- **Endereço:** `Seu endereço wallet`
+- **Linguagem:** Solidity ^0.8.24
+- **Padrão:** OpenZeppelin AccessControl
+
+Funções principais:
+
+```solidity
+createPrescription(bytes32 id, bytes32 ipfsHash)  // DOCTOR_ROLE
+markAsUsed(bytes32 id)                             // PHARMACY_ROLE
+revokePrescription(bytes32 id)                     // DOCTOR_ROLE
+getPrescription(bytes32 id) view returns (...)     // público
+```
+
+---
+
+## Licença
+
+Projeto acadêmico desenvolvido para o TCC do curso de Tecnologia em Sistemas para Internet do IFB — Campus Brasília, 2025.
