@@ -1,10 +1,11 @@
 import axios from "axios";
 
-export const api = axios.create({
-  baseURL: "https://tcc-medichan-production.up.railway.app/",
-});
+const baseURL =
+  import.meta.env.VITE_API_URL ||
+  "https://tcc-medichan-production.up.railway.app";
 
-// injeta o token automaticamente em todas as requisições
+export const api = axios.create({ baseURL });
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("medichain_token");
   if (token) {
