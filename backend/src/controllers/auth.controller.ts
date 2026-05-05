@@ -19,12 +19,17 @@ export async function register(req: Request, res: Response) {
 
   // valida campos obrigatórios por role
   const requestedRole = role || "PATIENT";
-  if (requestedRole === "PATIENT"  && !cpf)  return res.status(400).json({ error: "CPF é obrigatório para pacientes." });
-  if (requestedRole === "DOCTOR"   && !crm)  return res.status(400).json({ error: "CRM é obrigatório para médicos." });
-  if (requestedRole === "PHARMACY" && !cnpj) return res.status(400).json({ error: "CNPJ é obrigatório para farmácias." });
+  if (requestedRole === "PATIENT" && !cpf)
+    return res.status(400).json({ error: "CPF é obrigatório para pacientes." });
+  if (requestedRole === "DOCTOR" && !crm)
+    return res.status(400).json({ error: "CRM é obrigatório para médicos." });
+  if (requestedRole === "PHARMACY" && !cnpj)
+    return res
+      .status(400)
+      .json({ error: "CNPJ é obrigatório para farmácias." });
 
   // médico e farmácia entram como PATIENT até aprovação do admin
-  const actualRole = requestedRole === "PATIENT" ? "PATIENT" : "PATIENT";
+  const actualRole = requestedRole;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,8 +39,8 @@ export async function register(req: Request, res: Response) {
         email,
         password: hashedPassword,
         role: actualRole,
-        cpf:  requestedRole === "PATIENT"  ? cpf?.trim()  : null,
-        crm:  requestedRole === "DOCTOR"   ? crm?.trim()  : null,
+        cpf: requestedRole === "PATIENT" ? cpf?.trim() : null,
+        crm: requestedRole === "DOCTOR" ? crm?.trim() : null,
         cnpj: requestedRole === "PHARMACY" ? cnpj?.trim() : null,
       },
     });
@@ -64,12 +69,13 @@ export async function login(req: Request, res: Response) {
     if (!user) return res.status(401).json({ error: "Credenciais inválidas." });
 
     const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) return res.status(401).json({ error: "Credenciais inválidas." });
+    if (!passwordMatch)
+      return res.status(401).json({ error: "Credenciais inválidas." });
 
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     return res.json({
