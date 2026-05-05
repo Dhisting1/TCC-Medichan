@@ -22,7 +22,6 @@ Salva no IPFS, registra na blockchain e persiste no banco
 export async function create(req: Request, res: Response) {
   const { patient, patientEmail, medication, dosage } = req.body;
 
-  // 5. validação de entrada
   if (!patient || typeof patient !== "string" || patient.trim() === "") {
     return res.status(400).json({ error: "Campo 'patient' é obrigatório." });
   }
@@ -33,55 +32,52 @@ export async function create(req: Request, res: Response) {
     return res.status(400).json({ error: "Campo 'dosage' é obrigatório." });
   }
 
-  const doctorId = (req as any).user?.id;
+  const doctorId = (req as any).user?.id as string | undefined;
 
   try {
-    const data = { patient: patient.trim(), medication: medication.trim(), dosage: dosage.trim() };
+    const data = {
+      patient:    patient.trim(),
+      medication: medication.trim(),
+      dosage:     dosage.trim(),
+    };
 
-    // salva receita no IPFS
     const ipfsHash = await uploadToIPFS(data);
+    const id       = "0x" + crypto.randomBytes(32).toString("hex");
+    const hash     = keccak256(toUtf8Bytes(ipfsHash));
 
-    // gera id da receita
-    const id = "0x" + crypto.randomBytes(32).toString("hex");
-
-    // converte ipfsHash em bytes32
-    const hash = keccak256(toUtf8Bytes(ipfsHash));
-
-    // registra na blockchain
     await createPrescription(id, hash);
 
-    // 6. BASE_URL com fallback seguro
     const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+    const qr      = await QRCode.toDataURL(`${baseUrl}/prescriptions/validate/${id}`);
 
-    // gera QR code
-    const qr = await QRCode.toDataURL(`${baseUrl}/prescriptions/validate/${id}`);
-
-    // persiste no banco para histórico (RF04)
     await prisma.prescription.create({
       data: {
         id,
         ipfsHash,
-        patient: data.patient,
-        medication: data.medication,
-        dosage: data.dosage,
+        patient:      data.patient,
+        medication:   data.medication,
+        dosage:       data.dosage,
         qr,
-        patientEmail: patientEmail?.trim() || null,
-        status: "ACTIVE",
+        patientEmail: typeof patientEmail === "string" ? patientEmail.trim() || null : null,
+        status:       "ACTIVE",
         doctorId,
       },
     });
 
     // RF06 — gera PDF e notifica paciente por email
-    if (patientEmail?.trim()) {
-      const doctorEmail = (req as any).user?.email || "medico@medichain.com";
-      const doctorCrm   = (req as any).user?.crm   || undefined;
-      const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const patientEmailStr = typeof patientEmail === "string" ? patientEmail.trim() : "";
 
-      // gera PDF da prescrição
+    if (patientEmailStr) {
+      const doctorEmail = String((req as any).user?.email ?? "medico@medichain.com");
+      const doctorCrm   = (req as any).user?.crm != null
+        ? String((req as any).user.crm)
+        : undefined;
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
       const pdfBuffer = await generatePrescriptionPdf({
         prescriptionId: id,
         patient:        data.patient,
-        patientEmail:   patientEmail.trim(),
+        patientEmail:   patientEmailStr,
         medication:     data.medication,
         dosage:         data.dosage,
         doctorEmail,
@@ -92,13 +88,13 @@ export async function create(req: Request, res: Response) {
 
       await notifyPatient({
         patientName:    data.patient,
-        patientEmail:   patientEmail.trim(),
+        patientEmail:   patientEmailStr,
         prescriptionId: id,
         medication:     data.medication,
         dosage:         data.dosage,
         doctorEmail,
         qrDataUrl:      qr,
-        baseUrl,
+        baseUrl:        frontendUrl,
         pdfBuffer,
       });
     }
@@ -129,8 +125,8 @@ export async function validate(req: Request, res: Response) {
     }
 
     let status = "VALID";
-    if (prescription.revoked) status = "REVOKED";
-    else if (prescription.used) status = "USED";
+    if (prescription.revoked)    status = "REVOKED";
+    else if (prescription.used)  status = "USED";
 
     return res.json({
       status,
@@ -147,13 +143,11 @@ export async function validate(req: Request, res: Response) {
 
 /*
 Farmácia dispensa receita — somente PHARMACY
-Atualiza status na blockchain e no banco
 */
 export async function usePrescription(req: Request, res: Response) {
   const { id } = req.params;
 
   try {
-    // verifica se existe no banco antes de chamar a blockchain
     const prescription = await prisma.prescription.findUnique({ where: { id } });
 
     if (!prescription) {
@@ -164,11 +158,7 @@ export async function usePrescription(req: Request, res: Response) {
     }
 
     await markPrescriptionUsed(id);
-
-    await prisma.prescription.update({
-      where: { id },
-      data: { status: "USED" },
-    });
+    await prisma.prescription.update({ where: { id }, data: { status: "USED" } });
 
     return res.json({ message: "Receita dispensada com sucesso" });
   } catch (error: any) {
@@ -181,8 +171,8 @@ export async function usePrescription(req: Request, res: Response) {
 Médico revoga receita — somente DOCTOR dono da receita
 */
 export async function revoke(req: Request, res: Response) {
-  const { id } = req.params;
-  const doctorId = (req as any).user?.id;
+  const { id }     = req.params;
+  const doctorId   = (req as any).user?.id as string | undefined;
 
   try {
     const prescription = await prisma.prescription.findUnique({ where: { id } });
@@ -198,11 +188,7 @@ export async function revoke(req: Request, res: Response) {
     }
 
     await revokePrescription(id);
-
-    await prisma.prescription.update({
-      where: { id },
-      data: { status: "REVOKED" },
-    });
+    await prisma.prescription.update({ where: { id }, data: { status: "REVOKED" } });
 
     return res.json({ message: "Receita revogada com sucesso" });
   } catch (error: any) {
@@ -215,20 +201,13 @@ export async function revoke(req: Request, res: Response) {
 Histórico do médico — somente DOCTOR (RF04)
 */
 export async function doctorHistory(req: Request, res: Response) {
-  const doctorId = (req as any).user?.id;
+  const doctorId = (req as any).user?.id as string | undefined;
 
   try {
     const prescriptions = await prisma.prescription.findMany({
-      where: { doctorId },
+      where:   { doctorId },
       orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        patient: true,
-        medication: true,
-        dosage: true,
-        status: true,
-        createdAt: true,
-      },
+      select:  { id: true, patient: true, medication: true, dosage: true, status: true, createdAt: true },
     });
 
     return res.json({ prescriptions });
@@ -239,21 +218,14 @@ export async function doctorHistory(req: Request, res: Response) {
 }
 
 /*
-Histórico do farmacêutico — receitas ACTIVE disponíveis para dispensar (RF04)
+Receitas ACTIVE disponíveis para a farmácia dispensar
 */
 export async function pharmacyHistory(req: Request, res: Response) {
   try {
     const prescriptions = await prisma.prescription.findMany({
-      where: { status: "ACTIVE" },
+      where:   { status: "ACTIVE" },
       orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        patient: true,
-        medication: true,
-        dosage: true,
-        status: true,
-        createdAt: true,
-      },
+      select:  { id: true, patient: true, medication: true, dosage: true, status: true, createdAt: true },
     });
 
     return res.json({ prescriptions });
@@ -263,22 +235,15 @@ export async function pharmacyHistory(req: Request, res: Response) {
   }
 }
 
-
-
+/*
+Histórico de dispensações da farmácia (USED)
+*/
 export async function pharmacyDispensed(req: Request, res: Response) {
   try {
     const prescriptions = await prisma.prescription.findMany({
-      where: { status: "USED" },
+      where:   { status: "USED" },
       orderBy: { updatedAt: "desc" },
-      select: {
-        id: true,
-        patient: true,
-        medication: true,
-        dosage: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select:  { id: true, patient: true, medication: true, dosage: true, status: true, createdAt: true, updatedAt: true },
     });
 
     return res.json({ prescriptions });
