@@ -17,6 +17,8 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/prescriptions", prescriptionRoutes);
 
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
+
 app.listen(3000, () => {
   console.log("MediChain API running");
 });
