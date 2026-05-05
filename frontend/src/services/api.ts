@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "https://tcc-medichan-production.up.railway.app/",
 });
 
 // injeta o token automaticamente em todas as requisições
