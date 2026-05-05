@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-"scripts": {
-  "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-  "build": "tsc",
-  "start": "node dist/server.js",
-  "test": "jest"
-},
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "echo 'skip'",
+    "start": "ts-node --transpile-only src/server.ts",
+    "test": "jest"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -28,7 +28,8 @@
     "pdfkit": "^0.18.0",
     "prisma": "^5.22.0",
     "qrcode": "^1.5.4",
-    "redis": "^5.11.0"
+    "redis": "^5.11.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
