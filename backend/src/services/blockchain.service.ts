@@ -3,67 +3,61 @@ import { redis } from "../config/redis";
 
 /*
 Registra um médico na blockchain
-Somente ADMIN pode executar
 */
 export async function registerDoctor(wallet: string) {
   const tx = await contract.registerDoctor(wallet);
-
   await tx.wait();
 }
 
 /*
 Registra uma farmácia na blockchain
-Somente ADMIN pode executar
 */
 export async function registerPharmacy(wallet: string) {
   const tx = await contract.registerPharmacy(wallet);
-
   await tx.wait();
 }
 
 /*
 Cria uma receita médica na blockchain
-Somente médicos podem executar
 */
 export async function createPrescription(id: string, ipfsHash: string) {
   const tx = await contract.createPrescription(id, ipfsHash);
-
   await tx.wait();
-
   return tx.hash;
 }
 
 /*
-Médico revoga uma receita
+Farmácia marca receita como usada
 */
-export async function revokePrescription(id: string) {
-  const tx = await contract.revokePrescription(id);
-
-  await tx.wait();
-}
-
-
 export async function markPrescriptionUsed(id: string) {
   const tx = await contract.markAsUsed(id);
-
   await tx.wait();
 }
 
 /*
-Busca receita na blockchain com cache Redis
+Busca receita na blockchain com cache Redis opcional
 */
 export async function getPrescription(id: string) {
-  const cached = await redis.get(id);
-
-  if (cached) {
-    return JSON.parse(cached);
+  // tenta buscar do cache se Redis disponível
+  if (redis) {
+    try {
+      const cached = await redis.get(id);
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // ignora erro de cache
+    }
   }
 
   const data = await contract.getPrescription(id);
 
-  await redis.set(id, JSON.stringify(data), {
-    EX: 60,
-  });
+  // salva no cache se Redis disponível
+  if (redis) {
+    try {
+      await redis.set(id, JSON.stringify(data), { EX: 60 });
+    } catch {
+      // ignora erro de cache
+    }
+  }
 
   return data;
 }
@@ -74,17 +68,21 @@ Consulta status da receita
 export async function getPrescriptionStatus(id: string) {
   try {
     const prescription = await contract.getPrescription(id);
-
     const status = Number(prescription.status);
-
     return {
-      exists: status !== 0,
-      used: status === 2,
+      exists:  status !== 0,
+      used:    status === 2,
       revoked: status === 3,
     };
   } catch {
-    return {
-      exists: false,
-    };
+    return { exists: false };
   }
+}
+
+/*
+Revoga uma receita na blockchain
+*/
+export async function revokePrescription(id: string) {
+  const tx = await contract.revokePrescription(id);
+  await tx.wait();
 }
