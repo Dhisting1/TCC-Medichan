@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { api } from "../../services/api";
 import Layout from "../../components/Layout";
 import { TEAL, LIME, WHITE, BORDER, MUTED, SUBTLE } from "../../styles/tokens";
+import { Users, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 
 // ── estilos ────────────────────────────────────────────────────────────────────
 const Card = styled.div`
@@ -19,7 +20,7 @@ const HeaderLeft = styled.div`display: flex; align-items: center; gap: 12px;`;
 
 const HeaderIcon = styled.div`
   width: 36px; height: 36px; border-radius: 50%; background: ${LIME};
-  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  display: flex; align-items: center; justify-content: center; color: ${TEAL};
 `;
 
 const HeaderTitle = styled.span`font-size: 15px; font-weight: 600; color: ${TEAL};`;
@@ -30,6 +31,7 @@ const CountTag = styled.span`
 `;
 
 const MsgBox = styled.div<{ ok?: boolean }>`
+  display: flex; align-items: center; gap: 8px;
   padding: 12px 24px; font-size: 13px;
   background: ${(p: any) => p.ok ? "#f0fdf4" : "#fee2e2"};
   border-bottom: 1px solid ${(p: any) => p.ok ? "#bbf7d0" : "#fca5a5"};
@@ -86,6 +88,7 @@ const ApproveBtn = styled.button<{ variant?: string }>`
 `;
 
 const DeleteBtn = styled.button`
+  display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 6px;
   border: 1px solid #fca5a5; background: transparent;
   color: #dc2626; font-size: 12px; font-weight: 600; cursor: pointer;
@@ -156,7 +159,7 @@ export default function AdminDashboard() {
     setApproving(userId);
     try {
       await api.post("/users/verify-doctor", { userId, crm });
-      setMsg("✅ Médico aprovado com sucesso."); setMsgOk(true); loadUsers();
+      setMsg("Médico aprovado com sucesso."); setMsgOk(true); loadUsers();
     } catch (err: any) {
       setMsg(err.response?.data?.error || "Erro ao aprovar."); setMsgOk(false);
     } finally { setApproving(null); }
@@ -168,7 +171,7 @@ export default function AdminDashboard() {
     setApproving(userId);
     try {
       await api.post("/users/verify-pharmacy", { userId, cnpj });
-      setMsg("✅ Farmácia aprovada com sucesso."); setMsgOk(true); loadUsers();
+      setMsg("Farmácia aprovada com sucesso."); setMsgOk(true); loadUsers();
     } catch (err: any) {
       setMsg(err.response?.data?.error || "Erro ao aprovar."); setMsgOk(false);
     } finally { setApproving(null); }
@@ -179,14 +182,13 @@ export default function AdminDashboard() {
     setConfirmId(null);
     try {
       await api.delete(`/users/${userId}`);
-      setMsg("✅ Usuário excluído com sucesso."); setMsgOk(true);
+      setMsg("Usuário excluído com sucesso."); setMsgOk(true);
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (err: any) {
       setMsg(err.response?.data?.error || "Erro ao excluir."); setMsgOk(false);
     } finally { setDeleting(null); }
   }
 
-  // identifica campo identificador por role
   function getIdDoc(u: User) {
     if (u.role === "DOCTOR"   && u.crm)  return `CRM: ${u.crm}`;
     if (u.role === "PHARMACY" && u.cnpj) return `CNPJ: ${u.cnpj}`;
@@ -220,13 +222,22 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader>
           <HeaderLeft>
-            <HeaderIcon>👥</HeaderIcon>
+            <HeaderIcon>
+              <Users size={18} strokeWidth={2} />
+            </HeaderIcon>
             <HeaderTitle>Gerenciar Usuários</HeaderTitle>
           </HeaderLeft>
           {!loading && <CountTag>{users.length} usuários</CountTag>}
         </CardHeader>
 
-        {msg && <MsgBox ok={msgOk}>{msg}</MsgBox>}
+        {msg && (
+          <MsgBox ok={msgOk}>
+            {msgOk
+              ? <CheckCircle2 size={15} strokeWidth={2} />
+              : <AlertCircle size={15} strokeWidth={2} />}
+            {msg}
+          </MsgBox>
+        )}
         {loading && <EmptyMsg>Carregando...</EmptyMsg>}
         {!loading && users.length === 0 && <EmptyMsg>Nenhum usuário cadastrado.</EmptyMsg>}
 
@@ -285,7 +296,8 @@ export default function AdminDashboard() {
                           disabled={deleting === u.id}
                           onClick={() => setConfirmId(u.id)}
                         >
-                          {deleting === u.id ? "..." : "🗑 Excluir"}
+                          <Trash2 size={13} strokeWidth={2} />
+                          {deleting === u.id ? "..." : "Excluir"}
                         </DeleteBtn>
                       ) : (
                         <span style={{ color: "#d1d5db", fontSize: 12 }}>—</span>

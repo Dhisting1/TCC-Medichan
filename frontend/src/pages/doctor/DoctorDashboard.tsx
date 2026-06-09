@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
-import { useAuth } from "../../context/AuthContext";
+import { FilePlus, ClipboardList } from "lucide-react";
 
 const TEAL = "#0B3530";
 const LIME = "#CBE54E";
@@ -39,7 +39,7 @@ const IconCircle = styled.div`
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-  font-size: 24px;
+  color: ${TEAL};
 `;
 
 const CardTitle = styled.p`
@@ -57,19 +57,22 @@ const CardSub = styled.p`
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   return (
     <Layout>
       <DarkPanel>
         <FeatureCard onClick={() => navigate("/doctor/new")}>
-          <IconCircle>✎</IconCircle>
+          <IconCircle>
+            <FilePlus size={26} strokeWidth={2} />
+          </IconCircle>
           <CardTitle>Gerar nova prescrição</CardTitle>
           <CardSub>Criar novo receituário</CardSub>
         </FeatureCard>
 
         <FeatureCard onClick={() => navigate("/doctor/history")}>
-          <IconCircle>📋</IconCircle>
+          <IconCircle>
+            <ClipboardList size={26} strokeWidth={2} />
+          </IconCircle>
           <CardTitle>Histórico</CardTitle>
           <CardSub>Conferir prescrições anteriores autenticadas e enviadas</CardSub>
         </FeatureCard>
@@ -77,5 +80,3 @@ export default function DoctorDashboard() {
     </Layout>
   );
 }
-
-

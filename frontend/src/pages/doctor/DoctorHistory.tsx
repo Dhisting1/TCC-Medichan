@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { api } from "../../services/api";
 import Layout from "../../components/Layout";
+import { ClipboardList } from "lucide-react";
 
 const TEAL = "#0B3530";
 const LIME = "#CBE54E";
@@ -30,7 +31,7 @@ const HeaderIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  color: ${TEAL};
 `;
 
 const HeaderTitle = styled.span`
@@ -152,7 +153,9 @@ export default function DoctorHistory() {
     <Layout>
       <Card>
         <CardHeader>
-          <HeaderIcon>📋</HeaderIcon>
+          <HeaderIcon>
+            <ClipboardList size={18} strokeWidth={2} />
+          </HeaderIcon>
           <HeaderTitle>Minhas Prescrições</HeaderTitle>
         </CardHeader>
 

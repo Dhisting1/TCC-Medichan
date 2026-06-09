@@ -3,6 +3,8 @@ import styled from "styled-components";
 import { api } from "../../services/api";
 import Layout from "../../components/Layout";
 import { TEAL, LIME, WHITE, BORDER, MUTED, SUBTLE, STATUS_COLORS, STATUS_LABELS } from "../../styles/tokens";
+import { Search, CheckCircle2, AlertTriangle, XCircle, SearchX } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const Wrapper = styled.div`
   max-width: 560px;
@@ -32,7 +34,7 @@ const HeaderIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  color: ${TEAL};
 `;
 
 const HeaderTitle = styled.span`
@@ -93,6 +95,9 @@ const ResultBox = styled.div<{ status: string }>`
 `;
 
 const ResultStatus = styled.p<{ status: string }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
   font-weight: 700;
   color: ${(p: any) => STATUS_COLORS[p.status]?.text || "#6b7280"};
@@ -113,12 +118,12 @@ const InfoRow = styled.div`
 const InfoKey = styled.span`font-size: 12px; color: ${MUTED}; min-width: 80px;`;
 const InfoVal = styled.span`font-size: 13px; color: #111827; font-weight: 500;`;
 
-const statusEmoji: Record<string, string> = {
-  VALID:     "✅",
-  ACTIVE:    "✅",
-  USED:      "⚠️",
-  REVOKED:   "❌",
-  NOT_FOUND: "🔍",
+const statusIcon: Record<string, LucideIcon> = {
+  VALID:     CheckCircle2,
+  ACTIVE:    CheckCircle2,
+  USED:      AlertTriangle,
+  REVOKED:   XCircle,
+  NOT_FOUND: SearchX,
 };
 
 interface PrescResult {
@@ -149,13 +154,16 @@ export default function PatientDashboard() {
   }
 
   const normalizedStatus = result?.status === "ACTIVE" ? "VALID" : result?.status || "";
+  const StatusIcon = statusIcon[normalizedStatus];
 
   return (
     <Layout>
       <Wrapper>
         <Card>
           <CardHeader>
-            <HeaderIcon>🔍</HeaderIcon>
+            <HeaderIcon>
+              <Search size={18} strokeWidth={2} />
+            </HeaderIcon>
             <HeaderTitle>Consultar Receita</HeaderTitle>
           </CardHeader>
           <CardBody>
@@ -179,7 +187,8 @@ export default function PatientDashboard() {
             {result && (
               <ResultBox status={normalizedStatus}>
                 <ResultStatus status={normalizedStatus}>
-                  {statusEmoji[normalizedStatus]} {STATUS_LABELS[normalizedStatus] || result.status}
+                  {StatusIcon && <StatusIcon size={20} strokeWidth={2.2} />}
+                  {STATUS_LABELS[normalizedStatus] || result.status}
                 </ResultStatus>
                 <ResultSub>
                   {normalizedStatus === "VALID"     && "Esta receita está ativa e pode ser dispensada na farmácia."}

@@ -3,7 +3,15 @@ import { useNavigate, Link } from "react-router-dom";
 import styled from "styled-components";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { TEAL, LIME, WHITE, MUTED, BORDER, SUBTLE } from "../styles/tokens";
+import { TEAL, LIME, WHITE, MUTED, BORDER } from "../styles/tokens";
+import {
+  Plus,
+  ShieldCheck,
+  FileText,
+  Search,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 
 // ── layout ────────────────────────────────────────────────────────────────────
 const Page = styled.div`
@@ -37,10 +45,10 @@ const BrandText = styled.span`
   letter-spacing: -1px;
 `;
 
-const BrandPlus = styled.span`
-  font-size: 36px;
-  font-weight: 900;
+const BrandPlusWrap = styled.span`
+  display: inline-flex;
   color: ${LIME};
+  align-items: center;
 `;
 
 const Tagline = styled.p`
@@ -69,7 +77,10 @@ const Pills = styled.div`
 `;
 
 const Pill = styled.span`
-  padding: 6px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
   border-radius: 99px;
   border: 1px solid rgba(203,229,78,0.4);
   color: ${LIME};
@@ -156,6 +167,9 @@ const SubmitBtn = styled.button`
 `;
 
 const ErrorBox = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: #fee2e2;
   border: 1px solid #fca5a5;
   border-radius: 8px;
@@ -175,20 +189,6 @@ const FooterLink = styled.p`
     font-weight: 600;
     text-decoration: none;
     &:hover { text-decoration: underline; }
-  }
-`;
-
-const Divider = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  span { font-size: 12px; color: #9ca3af; }
-  &::before, &::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: ${BORDER};
   }
 `;
 
@@ -227,7 +227,9 @@ export default function Login() {
       <LeftPanel>
         <BrandLogo>
           <BrandText>Medichain</BrandText>
-          <BrandPlus>✛</BrandPlus>
+          <BrandPlusWrap>
+            <Plus size={32} strokeWidth={3} />
+          </BrandPlusWrap>
         </BrandLogo>
         <Tagline>Prescrições médicas seguras<br />na blockchain</Tagline>
         <TaglineSub>
@@ -235,10 +237,10 @@ export default function Login() {
           total e proteção contra falsificações.
         </TaglineSub>
         <Pills>
-          <Pill>🔒 Blockchain Ethereum</Pill>
-          <Pill>📄 IPFS</Pill>
-          <Pill>🔍 Rastreável</Pill>
-          <Pill>✅ Imutável</Pill>
+          <Pill><ShieldCheck size={14} strokeWidth={2.2} /> Blockchain Ethereum</Pill>
+          <Pill><FileText    size={14} strokeWidth={2.2} /> IPFS</Pill>
+          <Pill><Search      size={14} strokeWidth={2.2} /> Rastreável</Pill>
+          <Pill><CheckCircle2 size={14} strokeWidth={2.2} /> Imutável</Pill>
         </Pills>
       </LeftPanel>
 
@@ -247,13 +249,18 @@ export default function Login() {
         <FormBox>
           <MobileLogo>
             <BrandText style={{ fontSize: 24 }}>Medichain</BrandText>
-            <BrandPlus style={{ fontSize: 26 }}>✛</BrandPlus>
+            <BrandPlusWrap><Plus size={24} strokeWidth={3} /></BrandPlusWrap>
           </MobileLogo>
 
           <FormTitle>Bem-vindo de volta</FormTitle>
           <FormSub>Entre com sua conta para acessar o sistema</FormSub>
 
-          {error && <ErrorBox>⚠️ {error}</ErrorBox>}
+          {error && (
+            <ErrorBox>
+              <AlertTriangle size={16} strokeWidth={2} />
+              {error}
+            </ErrorBox>
+          )}
 
           <form onSubmit={handleLogin}>
             <Label>E-mail</Label>
@@ -268,7 +275,7 @@ export default function Login() {
             <Label>Senha</Label>
             <Input
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               value={password}
               onChange={e => setPassword(e.target.value)}
               autoComplete="current-password"

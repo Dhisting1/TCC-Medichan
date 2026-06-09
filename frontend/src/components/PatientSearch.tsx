@@ -1,7 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { api } from "../services/api";
-import { TEAL, LIME, WHITE, BORDER, MUTED, SUBTLE } from "../styles/tokens";
+import { TEAL, WHITE, BORDER } from "../styles/tokens";
+import { Search } from "lucide-react";
 
 const SideCard = styled.div`
   background: ${WHITE}; border-radius: 12px;
@@ -9,7 +10,8 @@ const SideCard = styled.div`
 `;
 
 const SideHeader = styled.div`
-  padding: 12px 16px; background: ${TEAL}; color: ${WHITE}; font-size: 13px; font-weight: 600;
+  padding: 12px 16px; background: ${TEAL}; color: ${WHITE};
+  font-size: 13px; font-weight: 600;
 `;
 
 const SideBody = styled.div`padding: 16px;`;
@@ -28,8 +30,9 @@ const SearchInput = styled.input`
 `;
 
 const SearchBtn = styled.button`
+  display: flex; align-items: center; justify-content: center;
   padding: 9px 14px; background: ${TEAL}; color: ${WHITE};
-  border: none; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: none; cursor: pointer;
   &:hover { opacity: 0.85; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
@@ -86,7 +89,7 @@ export default function PatientSearch({ onSelect, selected }: Props) {
               onKeyDown={e => e.key === "Enter" && handleSearch()}
             />
             <SearchBtn onClick={handleSearch} disabled={searching}>
-              {searching ? "..." : "🔍"}
+              {searching ? "..." : <Search size={14} strokeWidth={2.2} />}
             </SearchBtn>
           </SearchRow>
           {error && <ErrorMsg>{error}</ErrorMsg>}

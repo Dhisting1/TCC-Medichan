@@ -2,7 +2,14 @@ import { useState } from "react";
 import styled from "styled-components";
 import { api } from "../../services/api";
 import Layout from "../../components/Layout";
-import { TEAL, LIME, WHITE, BORDER, MUTED, SUBTLE } from "../../styles/tokens";
+import { TEAL, LIME, WHITE, BORDER, SUBTLE } from "../../styles/tokens";
+import {
+  FilePlus,
+  Search,
+  CheckCircle2,
+  Mail,
+  AlertCircle,
+} from "lucide-react";
 
 // ── layout ────────────────────────────────────────────────────────────────────
 const PageGrid = styled.div`
@@ -21,7 +28,7 @@ const CardHeader = styled.div`
 
 const HeaderIcon = styled.div`
   width: 36px; height: 36px; border-radius: 50%; background: ${LIME};
-  display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; color: ${TEAL}; flex-shrink: 0;
 `;
 
 const HeaderTitle = styled.span`font-size: 15px; font-weight: 600; color: ${TEAL};`;
@@ -45,6 +52,7 @@ const Textarea = styled.textarea`
   width: 100%; padding: 11px 14px;
   border: 1.5px solid ${BORDER}; border-radius: 8px; font-size: 14px; color: #111827;
   background: ${WHITE}; margin-bottom: 18px; resize: vertical; min-height: 90px;
+  font-family: inherit;
   &:focus { outline: none; border-color: ${TEAL}; }
   &::placeholder { color: #9ca3af; }
 `;
@@ -72,6 +80,7 @@ const SideCard = styled.div`
 `;
 
 const SideHeader = styled.div`
+  display: flex; align-items: center; gap: 8px;
   padding: 12px 16px; background: ${TEAL}; color: ${WHITE}; font-size: 13px; font-weight: 600;
 `;
 
@@ -90,8 +99,9 @@ const SearchInput = styled.input`
 `;
 
 const SearchBtn = styled.button`
+  display: flex; align-items: center; justify-content: center;
   padding: 9px 14px; background: ${TEAL}; color: ${WHITE};
-  border: none; font-size: 13px; cursor: pointer;
+  border: none; cursor: pointer;
   &:hover { opacity: 0.85; }
   &:disabled { opacity: 0.5; }
 `;
@@ -108,31 +118,35 @@ const NotFound = styled.p`font-size: 13px; color: #dc2626; margin-top: 4px;`;
 
 const SideField = styled.div`margin-bottom: 10px; &:last-child { margin-bottom: 0; }`;
 const SideLbl   = styled.p`font-size: 11px; color: #9ca3af; margin-bottom: 2px;`;
-const SideVal   = styled.p`font-size: 13px; color: #374151; font-weight: 500;`;
+const SideVal   = styled.p`font-size: 13px; color: #374151; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;`;
 
 // ── QR Box ────────────────────────────────────────────────────────────────────
 const QrBox = styled.div`
   margin-top: 16px; text-align: center;
-  p { font-size: 13px; color: #15803d; margin-bottom: 8px; font-weight: 500; }
+  p { font-size: 13px; color: #15803d; margin-bottom: 8px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
   img { border-radius: 8px; border: 2px solid #86efac; }
   small { display: block; margin-top: 6px; font-size: 11px; color: #6b7280; font-family: monospace; }
 `;
 
 const EmailNotice = styled.div`
+  display: flex; align-items: center; gap: 8px;
   margin-top: 12px; padding: 10px 12px; border-radius: 8px;
   background: #f0fdf4; border: 1px solid #bbf7d0; font-size: 12px; color: #15803d;
 `;
 
-const Msg = styled.p<{ ok?: boolean }>`
-  font-size: 13px; margin-top: 10px;
-  color: ${(p: any) => p.ok ? "#15803d" : "#dc2626"};
+const Msg = styled.p`
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; margin-top: 10px; color: #dc2626;
+`;
+
+const SelectedTag = styled.span`
+  color: #15803d; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;
 `;
 
 // ── interfaces ─────────────────────────────────────────────────────────────────
 interface PatientResult { id: string; email: string; cpf?: string; }
 
 export default function DoctorNew() {
-  // form
   const [medication, setMedication] = useState("");
   const [dosage,     setDosage]     = useState("");
   const [creating,   setCreating]   = useState(false);
@@ -141,7 +155,6 @@ export default function DoctorNew() {
   const [prescId,    setPrescId]    = useState("");
   const [emailSent,  setEmailSent]  = useState(false);
 
-  // busca de paciente
   const [searchQ,    setSearchQ]    = useState("");
   const [searching,  setSearching]  = useState(false);
   const [patient,    setPatient]    = useState<PatientResult | null>(null);
@@ -167,8 +180,8 @@ export default function DoctorNew() {
     setCreating(true);
     try {
       const res = await api.post("/prescriptions", {
-        patient:      patient.email,   // identifica o paciente pelo email
-        patientEmail: patient.email,   // RF06: envia email com PDF
+        patient:      patient.email,
+        patientEmail: patient.email,
         medication:   medication.trim(),
         dosage:       dosage.trim(),
       });
@@ -192,7 +205,7 @@ export default function DoctorNew() {
         {/* ── formulário principal ── */}
         <Card>
           <CardHeader>
-            <HeaderIcon>✎</HeaderIcon>
+            <HeaderIcon><FilePlus size={18} strokeWidth={2} /></HeaderIcon>
             <HeaderTitle>Nova prescrição</HeaderTitle>
           </CardHeader>
           <CardBody>
@@ -211,18 +224,27 @@ export default function DoctorNew() {
                 onChange={e => setDosage(e.target.value)}
               />
 
-              {error && <Msg>{error}</Msg>}
+              {error && (
+                <Msg>
+                  <AlertCircle size={14} strokeWidth={2} />
+                  {error}
+                </Msg>
+              )}
 
               {qr ? (
                 <>
                   <QrBox>
-                    <p>✅ Receita registrada na blockchain!</p>
+                    <p>
+                      <CheckCircle2 size={16} strokeWidth={2.2} />
+                      Receita registrada na blockchain!
+                    </p>
                     <img src={qr} alt="QR Code" width={160} />
                     <small>{prescId.slice(0, 32)}...</small>
                   </QrBox>
                   {emailSent && (
                     <EmailNotice>
-                      📧 PDF e QR Code enviados para <strong>{patient?.email}</strong>
+                      <Mail size={14} strokeWidth={2} />
+                      PDF e QR Code enviados para <strong>{patient?.email}</strong>
                     </EmailNotice>
                   )}
                   <BtnRow style={{ marginTop: 16 }}>
@@ -246,7 +268,10 @@ export default function DoctorNew() {
         <div>
           {/* busca de paciente */}
           <SideCard>
-            <SideHeader>🔍 Buscar paciente</SideHeader>
+            <SideHeader>
+              <Search size={14} strokeWidth={2} />
+              Buscar paciente
+            </SideHeader>
             <SideBody>
               <SearchRow>
                 <SearchInput
@@ -256,7 +281,7 @@ export default function DoctorNew() {
                   onKeyDown={e => e.key === "Enter" && handleSearch()}
                 />
                 <SearchBtn onClick={handleSearch} disabled={searching}>
-                  {searching ? "..." : "🔍"}
+                  {searching ? "..." : <Search size={14} strokeWidth={2.2} />}
                 </SearchBtn>
               </SearchRow>
               {searchErr && <NotFound>{searchErr}</NotFound>}
@@ -266,7 +291,12 @@ export default function DoctorNew() {
                   {patient.cpf && <PField><PLbl>CPF:</PLbl><PVal>{patient.cpf}</PVal></PField>}
                   <PField>
                     <PLbl>Status:</PLbl>
-                    <PVal style={{ color: "#15803d", fontWeight: 600 }}>✅ Selecionado</PVal>
+                    <PVal>
+                      <SelectedTag>
+                        <CheckCircle2 size={13} strokeWidth={2.2} />
+                        Selecionado
+                      </SelectedTag>
+                    </PVal>
                   </PField>
                 </PatientCard>
               )}
@@ -289,7 +319,12 @@ export default function DoctorNew() {
               <SideField>
                 <SideLbl>Notificação:</SideLbl>
                 <SideVal style={{ color: patient ? "#15803d" : "#9ca3af" }}>
-                  {patient ? "✉ PDF por email" : "—"}
+                  {patient ? (
+                    <>
+                      <Mail size={13} strokeWidth={2} />
+                      PDF por email
+                    </>
+                  ) : "—"}
                 </SideVal>
               </SideField>
             </SideBody>

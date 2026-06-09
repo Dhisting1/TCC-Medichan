@@ -35,7 +35,7 @@ O sistema está em produção e pode ser acessado:
 
 | Serviço | URL |
 |---------|-----|
-| 🌐 **Frontend** | [medichaintcc.netlify.app](https://medichaintcc.netlify.app/login) |
+| 🌐 **Frontend** | [medichaintcc.netlify.app](https://medichaintcc.netlify.app) |
 | 🔌 **Backend (API)** | https://tcc-medichan-production.up.railway.app |
 | ⛓ **Smart Contract** | [`0xe905e4e6...0Fa16`](https://sepolia.etherscan.io/address/0xe905e4e639AfFf9D9e30738c2a1F872D4cb0Fa16) |
 | ❤️ **Health Check** | [/health](https://tcc-medichan-production.up.railway.app/health) |

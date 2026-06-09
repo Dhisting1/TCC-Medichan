@@ -1,30 +1,40 @@
 import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  FilePlus,
+  ClipboardList,
+  Search,
+  Users,
+  LogOut,
+  Plus,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 // ── paleta do protótipo ──────────────────────────────────────────────────────
-const TEAL   = "#0B3530";
-const LIME   = "#CBE54E";
-const BG     = "#F0F2F0";
-const WHITE  = "#FFFFFF";
+const TEAL  = "#0B3530";
+const LIME  = "#CBE54E";
+const BG    = "#F0F2F0";
+const WHITE = "#FFFFFF";
 
 // ── nav items por role ───────────────────────────────────────────────────────
-const NAV: Record<string, { label: string; icon: string; path: string }[]> = {
+const NAV: Record<string, { label: string; Icon: LucideIcon; path: string }[]> = {
   DOCTOR: [
-    { label: "Home",              icon: "⊞", path: "/doctor" },
-    { label: "Nova prescrição",   icon: "✎", path: "/doctor/new" },
-    { label: "Minhas prescrições",icon: "📋", path: "/doctor/history" },
+    { label: "Home",               Icon: LayoutDashboard, path: "/doctor" },
+    { label: "Nova prescrição",    Icon: FilePlus,        path: "/doctor/new" },
+    { label: "Minhas prescrições", Icon: ClipboardList,   path: "/doctor/history" },
   ],
   PHARMACY: [
-    { label: "Home",            icon: "⊞", path: "/pharmacy" },
-    { label: "Validar receita", icon: "🔍", path: "/pharmacy" },
+    { label: "Home",            Icon: LayoutDashboard, path: "/pharmacy" },
+    { label: "Validar receita", Icon: Search,          path: "/pharmacy" },
   ],
   PATIENT: [
-    { label: "Home",              icon: "⊞", path: "/patient" },
+    { label: "Home", Icon: LayoutDashboard, path: "/patient" },
   ],
   ADMIN: [
-    { label: "Home",              icon: "⊞", path: "/admin" },
-    { label: "Usuários",          icon: "👥", path: "/admin" },
+    { label: "Home",     Icon: LayoutDashboard, path: "/admin" },
+    { label: "Usuários", Icon: Users,           path: "/admin" },
   ],
 };
 
@@ -59,10 +69,11 @@ const LogoText = styled.span`
   letter-spacing: -0.5px;
 `;
 
-const LogoPlus = styled.span`
-  font-size: 24px;
+const LogoPlusWrap = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: ${LIME};
-  font-weight: 900;
 `;
 
 const Nav = styled.nav`
@@ -85,12 +96,7 @@ const NavItem = styled.button<{ active?: boolean }>`
   text-align: left;
   transition: all 0.15s;
   &:hover { color: ${WHITE}; background: rgba(255,255,255,0.06); }
-`;
-
-const NavIcon = styled.span`
-  font-size: 16px;
-  width: 20px;
-  text-align: center;
+  svg { flex-shrink: 0; }
 `;
 
 const SairBtn = styled.button`
@@ -107,6 +113,7 @@ const SairBtn = styled.button`
   cursor: pointer;
   text-align: left;
   &:hover { color: ${WHITE}; }
+  svg { flex-shrink: 0; }
 `;
 
 const Main = styled.div`
@@ -162,7 +169,9 @@ export default function Layout({ children }: any) {
       <Sidebar>
         <Logo>
           <LogoText>Medichain</LogoText>
-          <LogoPlus>✛</LogoPlus>
+          <LogoPlusWrap>
+            <Plus size={24} strokeWidth={3} />
+          </LogoPlusWrap>
         </Logo>
 
         <Nav>
@@ -172,14 +181,15 @@ export default function Layout({ children }: any) {
               active={location.pathname === item.path}
               onClick={() => navigate(item.path)}
             >
-              <NavIcon>{item.icon}</NavIcon>
+              <item.Icon size={18} strokeWidth={2} />
               {item.label}
             </NavItem>
           ))}
         </Nav>
 
         <SairBtn onClick={handleLogout}>
-          <span>↪</span> Sair
+          <LogOut size={18} strokeWidth={2} />
+          Sair
         </SairBtn>
       </Sidebar>
 

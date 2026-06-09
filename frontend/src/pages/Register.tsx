@@ -3,6 +3,15 @@ import { useNavigate, Link } from "react-router-dom";
 import styled from "styled-components";
 import { api } from "../services/api";
 import { TEAL, LIME, WHITE, MUTED, BORDER } from "../styles/tokens";
+import {
+  Plus,
+  User,
+  Stethoscope,
+  Building2,
+  Info,
+  AlertTriangle,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 // ── layout ────────────────────────────────────────────────────────────────────
 const Page = styled.div`
@@ -20,7 +29,7 @@ const LeftPanel = styled.div`
 `;
 
 const BrandText = styled.span`font-size: 32px; font-weight: 800; color: ${WHITE}; letter-spacing: -1px;`;
-const BrandPlus = styled.span`font-size: 36px; font-weight: 900; color: ${LIME};`;
+const BrandPlusWrap = styled.span`display: inline-flex; color: ${LIME}; align-items: center;`;
 
 const Tagline = styled.p`
   font-size: 18px; font-weight: 600; color: ${WHITE};
@@ -63,10 +72,18 @@ const RoleCard = styled.button<{ active?: boolean }>`
   cursor: pointer;
   text-align: center;
   transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   &:hover { border-color: ${TEAL}; }
 `;
 
-const RoleEmoji = styled.div`font-size: 24px; margin-bottom: 6px;`;
+const RoleIcon = styled.div<{ active?: boolean }>`
+  color: ${p => p.active ? TEAL : MUTED};
+  display: flex;
+`;
+
 const RoleLabel = styled.div<{ active?: boolean }>`
   font-size: 12px; font-weight: ${p => p.active ? "700" : "500"};
   color: ${p => p.active ? TEAL : MUTED};
@@ -96,13 +113,16 @@ const SubmitBtn = styled.button`
 `;
 
 const ErrorBox = styled.div`
+  display: flex; align-items: center; gap: 8px;
   background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px;
   padding: 10px 14px; color: #dc2626; font-size: 13px; margin-bottom: 16px;
 `;
 
 const NoticeBanner = styled.div`
+  display: flex; align-items: flex-start; gap: 8px;
   background: #fefce8; border: 1px solid #fde68a; border-radius: 8px;
   padding: 12px 14px; color: #92400e; font-size: 12px; line-height: 1.5; margin-bottom: 20px;
+  svg { flex-shrink: 0; margin-top: 1px; }
 `;
 
 const FooterLink = styled.p`
@@ -111,17 +131,24 @@ const FooterLink = styled.p`
 `;
 
 // ── tipos de conta ────────────────────────────────────────────────────────────
-const ROLES = [
-  { value: "PATIENT",  label: "Paciente",  emoji: "🧑‍⚕️", extra: { field: "cpf",  label: "CPF",  placeholder: "000.000.000-00" } },
-  { value: "DOCTOR",   label: "Médico",    emoji: "👨‍⚕️", extra: { field: "crm",  label: "CRM",  placeholder: "CRM-UF 000000"   } },
-  { value: "PHARMACY", label: "Farmácia",  emoji: "🏥", extra: { field: "cnpj", label: "CNPJ", placeholder: "00.000.000/0001-00" } },
+interface Role {
+  value: string;
+  label: string;
+  Icon: LucideIcon;
+  extra: { field: string; label: string; placeholder: string };
+}
+
+const ROLES: Role[] = [
+  { value: "PATIENT",  label: "Paciente", Icon: User,        extra: { field: "cpf",  label: "CPF",  placeholder: "000.000.000-00" } },
+  { value: "DOCTOR",   label: "Médico",   Icon: Stethoscope, extra: { field: "crm",  label: "CRM",  placeholder: "CRM-UF 000000"   } },
+  { value: "PHARMACY", label: "Farmácia", Icon: Building2,   extra: { field: "cnpj", label: "CNPJ", placeholder: "00.000.000/0001-00" } },
 ];
 
 export default function Register() {
   const [role,     setRole]     = useState("PATIENT");
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [extra,    setExtra]    = useState("");   // cpf / crm / cnpj
+  const [extra,    setExtra]    = useState("");
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
   const navigate = useNavigate();
@@ -158,7 +185,7 @@ export default function Register() {
       <LeftPanel>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
           <BrandText>Medichain</BrandText>
-          <BrandPlus>✛</BrandPlus>
+          <BrandPlusWrap><Plus size={32} strokeWidth={3} /></BrandPlusWrap>
         </div>
         <Tagline>Sistema de E-Prescription<br />com Blockchain</Tagline>
         <TaglineSub>
@@ -180,27 +207,40 @@ export default function Register() {
 
           {/* seletor de role */}
           <RoleGrid>
-            {ROLES.map(r => (
-              <RoleCard
-                key={r.value}
-                type="button"
-                active={role === r.value}
-                onClick={() => { setRole(r.value); setExtra(""); setError(""); }}
-              >
-                <RoleEmoji>{r.emoji}</RoleEmoji>
-                <RoleLabel active={role === r.value}>{r.label}</RoleLabel>
-              </RoleCard>
-            ))}
+            {ROLES.map(r => {
+              const active = role === r.value;
+              return (
+                <RoleCard
+                  key={r.value}
+                  type="button"
+                  active={active}
+                  onClick={() => { setRole(r.value); setExtra(""); setError(""); }}
+                >
+                  <RoleIcon active={active}>
+                    <r.Icon size={22} strokeWidth={2} />
+                  </RoleIcon>
+                  <RoleLabel active={active}>{r.label}</RoleLabel>
+                </RoleCard>
+              );
+            })}
           </RoleGrid>
 
           {needsApproval && (
             <NoticeBanner>
-              ℹ️ Contas de <strong>{selected.label}</strong> ficam pendentes até aprovação
-              do administrador.
+              <Info size={15} strokeWidth={2} />
+              <span>
+                Contas de <strong>{selected.label}</strong> ficam pendentes até aprovação
+                do administrador.
+              </span>
             </NoticeBanner>
           )}
 
-          {error && <ErrorBox>⚠️ {error}</ErrorBox>}
+          {error && (
+            <ErrorBox>
+              <AlertTriangle size={16} strokeWidth={2} />
+              {error}
+            </ErrorBox>
+          )}
 
           <form onSubmit={handleRegister}>
             <Label>E-mail</Label>
