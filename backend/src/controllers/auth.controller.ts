@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { isValidCpf, normalizeCpf } from "../utils/cpf";
 
 import { prisma } from "../config/database";
 
@@ -27,6 +28,11 @@ export async function register(req: Request, res: Response) {
     return res
       .status(400)
       .json({ error: "CNPJ é obrigatório para farmácias." });
+
+  // valida o CPF se for paciente
+  if (requestedRole === "PATIENT" && !isValidCpf(cpf)) {
+    return res.status(400).json({ error: "CPF inválido." });
+  }
 
   // médico e farmácia entram como PATIENT até aprovação do admin
   const actualRole = requestedRole;
